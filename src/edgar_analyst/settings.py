@@ -49,8 +49,17 @@ class Settings(BaseSettings):
 
     @property
     def postgres_dsn(self) -> str:
+        """SQLAlchemy-style DSN (psycopg dialect) for langchain-postgres."""
         return (
             f"postgresql+psycopg://{self.postgres_user}:{self.postgres_password}"
+            f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+        )
+
+    @property
+    def postgres_dsn_psycopg(self) -> str:
+        """Plain psycopg DSN, no dialect prefix."""
+        return (
+            f"postgresql://{self.postgres_user}:{self.postgres_password}"
             f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
         )
 
