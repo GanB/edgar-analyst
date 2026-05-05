@@ -8,6 +8,7 @@ authors = [
 requires-python = ">=3.12"
 dependencies = [
     "anthropic>=0.98.1",
+    "beautifulsoup4>=4.14.3",
     "click>=8.3.3",
     "fastapi>=0.136.1",
     "httpx>=0.28.1",
@@ -16,8 +17,12 @@ dependencies = [
     "langchain-postgres>=0.0.17",
     "langchain-voyageai>=0.3.3",
     "langgraph>=1.1.10",
+    "lxml>=6.1.0",
+    "psycopg[binary]>=3.3.4",
     "pydantic>=2.13.3",
     "pydantic-settings>=2.14.0",
+    "tenacity>=9.1.4",
+    "tiktoken>=0.12.0",
     "uvicorn[standard]>=0.46.0",
 ]
 
@@ -33,6 +38,7 @@ dev = [
     "mypy>=1.20.2",
     "pytest>=9.0.3",
     "pytest-asyncio>=1.3.0",
+    "pytest-httpx>=0.36.2",
     "ruff>=0.15.12",
 ]
 
@@ -58,6 +64,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["B011"]
+"src/edgar_analyst/ingestion/parser.py" = ["RUF001", "RUF003"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -76,7 +83,16 @@ no_implicit_optional = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["langgraph.*"]
+module = [
+    "langgraph.*",
+    "langchain.*",
+    "langchain_text_splitters.*",
+    "langchain_voyageai.*",
+    "bs4.*",
+    "lxml.*",
+    "tiktoken.*",
+    "pgvector.*",
+]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
@@ -84,3 +100,6 @@ minversion = "8.0"
 addopts = "-ra --strict-markers"
 testpaths = ["tests"]
 asyncio_mode = "auto"
+markers = [
+    "integration: live end-to-end test; gated on INTEGRATION env var",
+]
