@@ -8,7 +8,7 @@ edgar-analyst ingests public SEC filings (10-K, 10-Q, 8-K), embeds them into a p
 
 ## Status
 
-v0.1.0 — working skeleton. EDGAR ingestion and the full RAG flow land in upcoming releases (see [Roadmap](#roadmap)).
+v0.2.0 — EDGAR ingestion pipeline. A single CLI command fetches one filing, parses sections, chunks, embeds via Voyage, and upserts into pgvector. Retrieval and synthesis land in v0.3.0.
 
 ## Architecture
 
@@ -61,6 +61,30 @@ The CLI banner is also useful as a smoke test:
 uv run edgar-analyst hello
 ```
 
+### v0.2.0 ingestion
+
+Initialize the schema, ingest a filing, and verify the row count:
+
+```bash
+docker compose up -d postgres
+uv run edgar-analyst init-db
+uv run edgar-analyst ingest --ticker AAPL --form 10-K
+uv run edgar-analyst verify --ticker AAPL
+```
+
+`ingest` resolves the ticker to a CIK via SEC's company tickers feed, fetches
+the most recent filing of the requested form type, parses its sections, chunks
+each section to ~500 tokens with 50 token overlap, embeds the chunks via
+Voyage `voyage-3`, and upserts them into the `documents` table. Re-running
+`ingest` for the same filing is idempotent: rows are updated in place via
+`ON CONFLICT (accession_no, chunk_index)`.
+
+10-Q ingestion follows the same shape:
+
+```bash
+uv run edgar-analyst ingest --ticker AAPL --form 10-Q
+```
+
 ## Project structure
 
 ```
@@ -78,8 +102,8 @@ Architecture decisions live in [`docs/adr/`](docs/adr/).
 
 ## Roadmap
 
-- **v0.1.0 (current)** — Skeleton, health endpoint, no-op LangGraph spine.
-- **v0.2.0** — EDGAR ingestion pipeline (filing fetch, HTML/XBRL parse, chunk, embed).
+- **v0.1.0** — Skeleton, health endpoint, no-op LangGraph spine.
+- **v0.2.0 (current)** — EDGAR ingestion pipeline (fetch, parse, chunk, embed, upsert).
 - **v0.3.0** — Retrieval and synthesis with citations end-to-end.
 - **v0.4.0** — React + Vite query UI.
 - **v0.5.0** — LangSmith eval harness with retrieval and faithfulness metrics.
