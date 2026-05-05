@@ -6,7 +6,7 @@ Accepted, 2026-05-05.
 
 ## Context
 
-The system needs a vector store for retrieval over filing chunks and a relational store for filing metadata, ingestion bookkeeping, and eventual user data. Operating two separate datastores in a portfolio-scope project is needless surface.
+The system needs a vector store for retrieval over filing chunks and a relational store for filing metadata, ingestion bookkeeping, and eventual user data. Operating two separate datastores at this scope is needless surface.
 
 ## Decision
 
@@ -21,6 +21,6 @@ Use the `pgvector` extension on Postgres 16, run locally via Docker Compose, wit
 
 ## Alternatives considered
 
-- **Pinecone** — managed and fast, but adds a third-party dependency and a billing relationship for a self-contained portfolio project.
+- **Pinecone** — managed and fast, but adds a third-party dependency and a billing relationship for a self-contained project that already runs Postgres.
 - **Weaviate or Qdrant** — capable, but introduce a second datastore alongside Postgres for no concrete benefit at this scope.
 - **FAISS in-process** — fast and dependency-light, but has no persistence or transactional story and would need to be rebuilt every restart.
