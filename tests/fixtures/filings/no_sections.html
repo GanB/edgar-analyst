@@ -1,0 +1,11 @@
+<html><body>
+<p>This filing has no recognizable section headers, only flowing prose
+that talks about the business and its operations and prospects without
+any formal Item structure at all. It might happen with very old filings
+or with reformatted exhibit attachments. The parser should still produce
+a single section so the rest of the pipeline can chunk and embed it.</p>
+<p>Additional paragraph of body text to ensure the fallback section is
+non-trivial in length and that the parser does not silently drop content
+that lacks an Item structure. The pipeline must remain useful even when
+the filing's own structure is absent.</p>
+</body></html>
