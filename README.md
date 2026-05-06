@@ -8,7 +8,7 @@ edgar-analyst ingests public SEC filings (10-K, 10-Q, 8-K), embeds them into a p
 
 ## Status
 
-v0.2.0 — EDGAR ingestion pipeline. A single CLI command fetches one filing, parses sections, chunks, embeds via Voyage, and upserts into pgvector. Retrieval and synthesis land in v0.3.0.
+v0.3.0 — Retrieval and synthesis. The query path embeds a question via Voyage, retrieves top-k chunks from pgvector by cosine similarity, and synthesizes an answer with Anthropic Claude Sonnet 4.5 inside a LangGraph state machine. Inline `[chunk_id=N]` markers are parsed into a citation list. Both a CLI command and a streaming FastAPI endpoint are available.
 
 ## Architecture
 
@@ -85,6 +85,32 @@ Voyage `voyage-3`, and upserts them into the `documents` table. Re-running
 uv run edgar-analyst ingest --ticker AAPL --form 10-Q
 ```
 
+### v0.3.0 query
+
+Ask a question about an ingested filing from the CLI:
+
+```bash
+uv run edgar-analyst ask --ticker AAPL "What are Apple's biggest risk factors?"
+```
+
+The output is the synthesized answer (with inline `[chunk_id=N]` markers
+that map back to the source filing) followed by a `Sources:` section
+listing every cited chunk with its item id, section title, accession
+number, chunk index, and a snippet.
+
+The same flow is exposed as a streaming HTTP endpoint:
+
+```bash
+uv run uvicorn edgar_analyst.api.main:app --reload
+curl -N -X POST localhost:8000/v1/query \
+     -H "Content-Type: application/json" \
+     -d '{"ticker":"AAPL","question":"What are Apple risk factors?"}'
+```
+
+The endpoint emits Server-Sent Events: one `event: token` per streamed
+chunk, then a single `event: citations` with the deduped list, then a
+terminal `event: done`. Default top-k is 8 (override via `RETRIEVAL_TOP_K`).
+
 ## Project structure
 
 ```
@@ -92,7 +118,7 @@ src/edgar_analyst/
 ├── api/          FastAPI app and routes
 ├── cli.py        click CLI (entry point: edgar-analyst)
 ├── ingestion/    EDGAR fetch + parse + chunk + embed (v0.2.0)
-├── retrieval/    pgvector retrieval (v0.3.0)
+├── retrieval/    Voyage query embedding + pgvector cosine search
 ├── synthesis/    LangGraph state machine for query answering
 ├── eval/         LangSmith-backed eval harness (v0.5.0)
 └── settings.py   Pydantic-settings configuration
@@ -103,9 +129,9 @@ Architecture decisions live in [`docs/adr/`](docs/adr/).
 ## Roadmap
 
 - **v0.1.0** — Skeleton, health endpoint, no-op LangGraph spine.
-- **v0.2.0 (current)** — EDGAR ingestion pipeline (fetch, parse, chunk, embed, upsert).
-- **v0.3.0** — Retrieval and synthesis with citations end-to-end.
-- **v0.4.0** — React + Vite query UI.
+- **v0.2.0** — EDGAR ingestion pipeline (fetch, parse, chunk, embed, upsert).
+- **v0.3.0 (current)** — Retrieval and synthesis with citations end-to-end (CLI + streaming HTTP).
+- **v0.4.0** — React + Vite query UI; cross-encoder reranker.
 - **v0.5.0** — LangSmith eval harness with retrieval and faithfulness metrics.
 - **Future** — ECS Fargate deploy when there is a reason to keep it running.
 
