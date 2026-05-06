@@ -1,6 +1,6 @@
 [project]
 name = "edgar-analyst"
-version = "0.1.0"
+version = "0.3.0"
 description = "RAG over public SEC EDGAR filings using Python, LangChain, and LangGraph"
 authors = [
     { name = "Ganesh Babu", email = "ganesh@ganeshbabu.dev" }

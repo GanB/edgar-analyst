@@ -51,3 +51,18 @@ async def test_ingest_nke_10k_end_to_end() -> None:
     finally:
         conn.close()
     assert count >= 30
+
+
+async def test_query_aapl_risks_end_to_end() -> None:
+    """Live query path: Voyage embed + pgvector + Anthropic synthesis."""
+    settings = get_settings()
+    assert settings.voyage_api_key, "VOYAGE_API_KEY must be set"
+    assert settings.anthropic_api_key, "ANTHROPIC_API_KEY must be set"
+
+    from edgar_analyst.synthesis import run_query
+
+    state = await run_query("AAPL", "What are Apple's biggest risk factors?")
+
+    assert not state.get("error"), state.get("error")
+    assert state.get("synthesis"), "synthesis should be non-empty"
+    assert len(state.get("citations") or []) >= 1, "expected at least one citation"
