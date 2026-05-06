@@ -43,6 +43,12 @@ class Settings(BaseSettings):
         description="User-Agent header value for SEC EDGAR requests.",
     )
 
+    # Retrieval
+    retrieval_top_k: int = Field(
+        default=8,
+        description="Number of chunks returned per vector search.",
+    )
+
     # Runtime
     app_env: str = "development"
     log_level: str = "info"
