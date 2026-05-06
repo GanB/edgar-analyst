@@ -38,4 +38,6 @@ jobs:
         run: uv sync --frozen
 
       - name: pip-audit
-        run: uvx pip-audit --strict --disable-pip
+        run: |
+          source .venv/bin/activate
+          pip-audit --strict
