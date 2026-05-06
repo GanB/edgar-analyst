@@ -18,6 +18,7 @@ from edgar_analyst.ingestion.store import (
     sample_sections_for_ticker,
 )
 from edgar_analyst.settings import get_settings
+from edgar_analyst.synthesis import run_query
 
 
 def _configure_logging(level: str) -> None:
@@ -96,6 +97,37 @@ def verify(ticker: str) -> None:
             click.echo(f"  Item {item_id}: {title}")
     else:
         click.echo("No sections found. Run `edgar-analyst ingest` first.")
+
+
+@main.command()
+@click.option("--ticker", required=True, help="Stock ticker, e.g. AAPL.")
+@click.argument("question", required=True)
+def ask(ticker: str, question: str) -> None:
+    """Answer a question about an ingested filing with cited sources."""
+    settings = get_settings()
+    _configure_logging(settings.log_level)
+    state = asyncio.run(run_query(ticker, question))
+
+    error = state.get("error")
+    if error:
+        click.echo(f"error: {error}", err=True)
+        raise SystemExit(1)
+
+    synthesis = state.get("synthesis", "").strip()
+    citations = state.get("citations") or []
+
+    click.echo(synthesis)
+    click.echo("")
+    click.echo("Sources:")
+    if not citations:
+        click.echo("  (no sources cited)")
+        return
+    for c in citations:
+        click.echo(
+            f"  - Item {c.item_id} | {c.section_title} "
+            f"| accession={c.accession_no} chunk={c.chunk_index}"
+        )
+        click.echo(f"    snippet: {c.snippet}")
 
 
 if __name__ == "__main__":
