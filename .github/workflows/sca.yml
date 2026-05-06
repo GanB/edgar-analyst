@@ -35,7 +35,7 @@ jobs:
           enable-cache: true
 
       - name: Export resolved dependencies
-        run: uv export --frozen --no-dev --format requirements-txt > /tmp/requirements.txt
+        run: uv export --frozen --no-dev --no-emit-project --format requirements-txt > /tmp/requirements.txt
 
       - name: pip-audit
         run: uvx pip-audit --strict --requirement /tmp/requirements.txt
